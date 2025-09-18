@@ -10,10 +10,6 @@ from bs4 import BeautifulSoup
 import chromadb
 
 client = chromadb.PersistentClient(path="./chroma_db")
-#     api_key="ck-42xHRD8RyxygnpGqw2SbVgqwSALZnrBL7TG22Jyxqndw",
-#     tenant="a41a948d-3ede-4ee4-a7be-efb41d8428d1",
-#     database="CUDA-Weaver",
-# )
 
 # -------------------------
 # 2. Stage -> Collection mapping
