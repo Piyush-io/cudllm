@@ -83,6 +83,7 @@ class FSR_Framework:
                     validated.append((cand, bin_path))
                 else:
                     validation_errors.append(out)
+                    self._log.debug("Validation failed for candidate; output=\n%s", out)
 
             self._log.info("Validated %d/%d compiled", len(validated), len(compiled))
             if not validated:
@@ -104,6 +105,8 @@ class FSR_Framework:
                     fastest_time = time_ms
                     fastest_kernel = cand
                     best_out = out
+                elif not ok:
+                    self._log.debug("Profiling failed for candidate; output=\n%s", out)
 
             if fastest_kernel is None:
                 error_history.append("profiling failed")

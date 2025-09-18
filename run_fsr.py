@@ -1,13 +1,45 @@
 import os
 import argparse
 import logging
+import subprocess
 from src.core.fsr_framework import FSR_Framework
 from src.core.benchmarks import vector_add_task
 
 
+def _detect_sm_arch() -> str | None:
+    """Detect GPU SM arch (e.g., sm_75) using nvidia-smi compute capability."""
+    try:
+        proc = subprocess.run(
+            [
+                "nvidia-smi",
+                "--query-gpu=compute_cap",
+                "--format=csv,noheader",
+            ],
+            capture_output=True,
+            text=True,
+            check=False,
+        )
+        if proc.returncode != 0:
+            return None
+        line = proc.stdout.strip().splitlines()[0].strip()
+        # Expected like "7.5" or "8.6"
+        if not line or "." not in line:
+            return None
+        major_str, minor_str = line.split(".", 1)
+        major = int(major_str)
+        minor = int(minor_str)
+        return f"sm_{major}{minor}"
+    except Exception:
+        return None
+
+
 def main() -> None:
     parser = argparse.ArgumentParser(description="Run FSR search for CUDA kernel generation")
-    parser.add_argument("--arch", default=os.environ.get("GPU_ARCH", "sm_80"), help="Target GPU arch, e.g. sm_80, sm_86, sm_90")
+    parser.add_argument(
+        "--arch",
+        default=os.environ.get("GPU_ARCH", "auto"),
+        help="Target GPU arch, e.g. sm_80, sm_86, sm_90, or 'auto'",
+    )
     parser.add_argument("--depth", type=int, default=int(os.environ.get("FSR_DEPTH", 2)), help="Search max depth")
     parser.add_argument("--candidates", type=int, default=int(os.environ.get("FSR_CANDIDATES", 2)), help="Candidates per round")
     parser.add_argument("--dry-run", action="store_true", help="Do not compile/validate/profile; only generate candidates and save them")
@@ -22,8 +54,21 @@ def main() -> None:
 
     fsr = FSR_Framework(max_depth=args.depth, candidates_per_round=args.candidates)
 
+    # Resolve architecture
+    resolved_arch = args.arch
+    if resolved_arch.lower() in ("auto", "detect", "sm_auto", "auto_detect"):
+        detected = _detect_sm_arch()
+        if detected:
+            resolved_arch = detected
+            logging.getLogger("run_fsr").info("auto-detected GPU arch: %s", resolved_arch)
+        else:
+            resolved_arch = "sm_80"
+            logging.getLogger("run_fsr").warning(
+                "failed to auto-detect GPU arch; falling back to %s", resolved_arch
+            )
+
     if args.dry_run:
-        prompt = fsr.prompts.create_initial_prompt(task.description, task.host_code, {"arch": args.arch}, fsr.N)
+        prompt = fsr.prompts.create_initial_prompt(task.description, task.host_code, {"arch": resolved_arch}, fsr.N)
         if args.offline:
             kernels = [
                 "#include <cstdio>\nint main(){ printf(\"OK\\n\"); printf(\"TIME_MS 0.0\\n\"); return 0;}"
@@ -39,7 +84,7 @@ def main() -> None:
             log.info("saved: %s", out)
         return
 
-    result = fsr.fsr_search(task.description, task.host_code, {"arch": args.arch})
+    result = fsr.fsr_search(task.description, task.host_code, {"arch": resolved_arch})
 
     log.info("iterations=%d", result.iterations)
     log.info("best_time_ms=%.3f", result.best_time_ms)
