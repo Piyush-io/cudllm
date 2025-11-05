@@ -14,12 +14,12 @@ This project implements an FSR framework that:
 
 ## Features
 
-- ✅ **Interactive Menu Interface** - No CLI flags to remember
-- ✅ **Cloud-First ChromaDB** - Supports both cloud and local persistent storage
-- ✅ **Auto GPU Detection** - Automatically detects your GPU architecture
-- ✅ **Hierarchical RAG** - Context retrieval across 5 knowledge stages
-- ✅ **Iterative Refinement** - Learns from compilation and performance feedback
-- ✅ **Clean Temp Management** - Automatic cleanup of compilation artifacts
+- **Interactive Menu Interface** - No CLI flags to remember
+- **Cloud-First ChromaDB** - Supports both cloud and local persistent storage
+- **Auto GPU Detection** - Automatically detects your GPU architecture
+- **Hierarchical RAG** - Context retrieval across 5 knowledge stages
+- **Iterative Refinement** - Learns from compilation and performance feedback
+- **Clean Temp Management** - Automatic cleanup of compilation artifacts
 
 ## Architecture
 
@@ -135,17 +135,17 @@ The menu will guide you through:
 
 Example session:
 ```
-🚀 FSR CUDA Kernel Generator - Interactive Mode
+FSR CUDA Kernel Generator - Interactive Mode
 ============================================================
 
-📋 Environment Setup
+Environment Setup
 
-✅ ChromaDB Cloud configured: your-tenant/your-database
-🔍 Auto-detected GPU: sm_86
+ChromaDB Cloud configured: your-tenant/your-database
+Auto-detected GPU: sm_86
 
 GPU architecture [sm_86]: 
 
-📊 Search Configuration
+Search Configuration
 
 Maximum search depth (iterations) [2]: 3
 Candidates per iteration [2]: 5
@@ -153,7 +153,7 @@ Log level (DEBUG/INFO/WARNING) [INFO]:
 
 Dry run? (generate only, no compile/run) [y/N]: n
 
-📝 Configuration Summary:
+Configuration Summary:
 ============================================================
   GPU Architecture: sm_86
   Search Depth: 3
@@ -165,7 +165,7 @@ Dry run? (generate only, no compile/run) [y/N]: n
 
 Start FSR search? [Y/n]: y
 
-🔥 Starting FSR search...
+Starting FSR search...
 ```
 
 ### Command-Line Mode (Legacy)
@@ -276,14 +276,14 @@ for iteration in range(max_depth):
 ## Example Output
 
 ```
-🎯 FSR Search Results
+FSR Search Results
 ============================================================
   Iterations: 3
   Total Candidates: 15
   Best Time: 0.042 ms
 ============================================================
 
-✅ Best kernel saved: best_kernel.cu
+Best kernel saved: best_kernel.cu
 ```
 
 ## Troubleshooting
@@ -302,7 +302,7 @@ echo $CHROMA_TENANT   # Should show: a41a948d-3ede-4ee4-a7be-efb41d8428d1
 echo $CHROMA_DATABASE # Should show: CUDA-Weaver
 
 # Test connection to ChromaDB Cloud
-python -c "from src.core.chroma_client import get_chroma_client; client = get_chroma_client(); print('✅ Connected to ChromaDB Cloud')"
+python -c "from src.core.chroma_client import get_chroma_client; client = get_chroma_client(); print('Connected to ChromaDB Cloud')"
 ```
 
 **If connection fails:**

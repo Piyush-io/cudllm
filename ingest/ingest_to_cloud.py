@@ -29,7 +29,7 @@ def extract_pdf_text(path: Path) -> str:
             if page_text and page_text.strip():
                 text_parts.append(page_text)
         except Exception as e:
-            print(f"⚠️  Failed to extract page {i} from {path}: {e}")
+            print(f"WARNING: Failed to extract page {i} from {path}: {e}")
     return "\n".join(text_parts)
 
 
@@ -67,11 +67,11 @@ def ingest_file(path: Path, stage: str, client, batch_size: int = 100):
     elif ext == ".html":
         raw_text = extract_html_text(path)
     else:
-        print(f"⚠️  Skipping unsupported file: {path}")
+        print(f"Skipping unsupported file: {path}")
         return
 
     if not raw_text or not raw_text.strip():
-        print(f"⚠️  No text extracted from {path}")
+        print(f"WARNING: No text extracted from {path}")
         return
 
     chunks = chunk_text(raw_text)
@@ -91,15 +91,15 @@ def ingest_file(path: Path, stage: str, client, batch_size: int = 100):
                 ids=batch_ids,
             )
         except Exception as e:
-            print(f"⚠️  Failed to add batch {i} for {path.name}: {e}")
+            print(f"WARNING: Failed to add batch {i} for {path.name}: {e}")
             continue
 
-    print(f"✅ Ingested {path.name} → {stage} ({len(chunks)} chunks)")
+    print(f"Ingested {path.name} -> {stage} ({len(chunks)} chunks)")
 
 
 def main():
     """Main ingestion."""
-    print("\n🔄 ChromaDB Cloud Ingestion\n")
+    print("\nChromaDB Cloud Ingestion\n")
 
     # Ensure cloud mode
     os.environ["CHROMA_MODE"] = "cloud"
@@ -107,7 +107,7 @@ def main():
     try:
         client = get_chroma_client()
     except ValueError as e:
-        print(f"❌ Failed to connect to ChromaDB: {e}")
+        print(f"ERROR: Failed to connect to ChromaDB: {e}")
         print("\nPlease ensure you have set the following environment variables:")
         print("  - CHROMA_API_KEY")
         print("  - CHROMA_TENANT")
@@ -143,16 +143,16 @@ def main():
     processed = 0
 
     for stage, paths in files_to_ingest.items():
-        print(f"\n📦 Processing stage: {stage}")
+        print(f"\nProcessing stage: {stage}")
         for path in paths:
             if path.exists():
                 ingest_file(path, stage, client)
                 processed += 1
             else:
-                print(f"⚠️  File not found: {path}")
+                print(f"WARNING: File not found: {path}")
 
     print("\n" + "=" * 60)
-    print(f"✨ Ingestion complete! Processed {processed}/{total_files} files\n")
+    print(f"Ingestion complete. Processed {processed}/{total_files} files\n")
 
 
 if __name__ == "__main__":

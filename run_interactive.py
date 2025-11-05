@@ -58,11 +58,11 @@ def setup_logging(level: str = "INFO"):
 def main():
     """Interactive FSR menu."""
     print("\n" + "=" * 60)
-    print("🚀 FSR CUDA Kernel Generator - Interactive Mode")
+    print("FSR CUDA Kernel Generator - Interactive Mode")
     print("=" * 60 + "\n")
 
     # Environment check
-    print("📋 Environment Setup\n")
+    print("Environment Setup\n")
 
     # ChromaDB Cloud credentials check
     chroma_mode = os.environ.get("CHROMA_MODE", "cloud")
@@ -72,7 +72,7 @@ def main():
 
     if chroma_mode.lower() == "cloud":
         if not all([chroma_api_key, chroma_tenant, chroma_database]):
-            print("⚠️  ChromaDB Cloud credentials not found in environment!")
+            print("WARNING: ChromaDB Cloud credentials not found in environment!")
             print("Please set the following environment variables:")
             print("  - CHROMA_API_KEY")
             print("  - CHROMA_TENANT")
@@ -81,27 +81,27 @@ def main():
             print("RAG retrieval will fail without proper credentials.\n")
 
             if not yes_no("Continue anyway?", default=False):
-                print("\n❌ Cancelled. Please configure ChromaDB credentials first.\n")
+                print("\nCancelled. Please configure ChromaDB credentials first.\n")
                 return
         else:
-            print(f"✅ ChromaDB Cloud configured: {chroma_tenant}/{chroma_database}")
+            print(f"ChromaDB Cloud configured: {chroma_tenant}/{chroma_database}")
     else:
         persist_path = os.environ.get("CHROMA_PERSIST_PATH", "./chroma_db")
-        print(f"✅ ChromaDB Persistent mode: {persist_path}")
+        print(f"ChromaDB Persistent mode: {persist_path}")
 
     print()
 
     # GPU Architecture
     detected_arch = detect_gpu_arch()
     if detected_arch:
-        print(f"🔍 Auto-detected GPU: {detected_arch}")
+        print(f"Auto-detected GPU: {detected_arch}")
         arch = get_input("GPU architecture", detected_arch)
     else:
-        print("⚠️  Could not auto-detect GPU")
+        print("WARNING: Could not auto-detect GPU")
         arch = get_input("GPU architecture (e.g., sm_80, sm_86, sm_90)", "sm_80")
 
     # Search parameters
-    print("\n📊 Search Configuration\n")
+    print("\nSearch Configuration\n")
     depth = int(get_input("Maximum search depth (iterations)", "2"))
     candidates = int(get_input("Candidates per iteration", "2"))
 
@@ -115,7 +115,7 @@ def main():
 
     # Confirmation
     print("\n" + "=" * 60)
-    print("📝 Configuration Summary:")
+    print("Configuration Summary:")
     print("=" * 60)
     print(f"  GPU Architecture: {arch}")
     print(f"  Search Depth: {depth}")
@@ -126,11 +126,11 @@ def main():
     print("=" * 60 + "\n")
 
     if not yes_no("Start FSR search?", default=True):
-        print("\n❌ Cancelled.\n")
+        print("\nCancelled.\n")
         return
 
     # Run FSR
-    print("\n🔥 Starting FSR search...\n")
+    print("\nStarting FSR search...\n")
 
     task = vector_add_task()
     fsr = FSR_Framework(max_depth=depth, candidates_per_round=candidates)
@@ -141,14 +141,14 @@ def main():
             task.description, task.host_code, {"arch": arch}, candidates
         )
         kernels = fsr.generate_kernels(prompt, candidates)
-        print(f"\n✅ Generated {len(kernels)} candidates\n")
+        print(f"\nGenerated {len(kernels)} candidates\n")
 
         for i, kernel in enumerate(kernels):
             out_path = Path(f"candidate_{i}.cu")
             out_path.write_text(kernel)
-            print(f"  📄 Saved: {out_path}")
+            print(f"  Saved: {out_path}")
 
-        print("\n✨ Dry run complete!\n")
+        print("\nDry run complete.\n")
         return
 
     # Full search
@@ -156,7 +156,7 @@ def main():
 
     # Results
     print("\n" + "=" * 60)
-    print("🎯 FSR Search Results")
+    print("FSR Search Results")
     print("=" * 60)
     print(f"  Iterations: {result.iterations}")
     print(f"  Total Candidates: {len(result.candidates)}")
@@ -169,9 +169,9 @@ def main():
     if result.best_kernel:
         best_path = Path("best_kernel.cu")
         best_path.write_text(result.best_kernel)
-        print(f"✅ Best kernel saved: {best_path}\n")
+        print(f"Best kernel saved: {best_path}\n")
     else:
-        print("⚠️  No valid kernel found\n")
+        print("WARNING: No valid kernel found\n")
 
     # Cleanup
     try:
@@ -184,7 +184,7 @@ if __name__ == "__main__":
     try:
         main()
     except KeyboardInterrupt:
-        print("\n\n❌ Interrupted by user.\n")
+        print("\n\nInterrupted by user.\n")
     except Exception as e:
-        print(f"\n\n❌ Error: {e}\n")
+        print(f"\n\nERROR: {e}\n")
         raise
