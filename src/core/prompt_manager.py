@@ -1,4 +1,5 @@
 from typing import List, Dict
+import logging
 from ..schemas.knowledge import StructuredUserIntent
 from .hierarchical_rag import HierarchicalRAG
 
@@ -6,8 +7,11 @@ from .hierarchical_rag import HierarchicalRAG
 class PromptManager:
     def __init__(self) -> None:
         self.rag = HierarchicalRAG()
+        self._log = logging.getLogger(__name__)
 
-    def create_initial_prompt(self, task_desc: str, host_code: str, hw_spec: Dict[str, str], n: int) -> str:
+    def create_initial_prompt(
+        self, task_desc: str, host_code: str, hw_spec: Dict[str, str], n: int
+    ) -> str:
         arch = hw_spec.get("arch", "sm_80")
         kb_text = ""
         kb_summary = ""
@@ -27,8 +31,19 @@ class PromptManager:
             if kb.examples:
                 snippets += kb.examples.snippets[:2]
             kb_text = "\n---\n".join(snippets[:6])
-        except Exception:
+        except Exception as e:
+            self._log.warning(
+                f"Failed to retrieve knowledge base context: {e}", exc_info=True
+            )
             kb_text = ""
+
+        # Validate that we got some context
+        if not kb_text and not kb_summary:
+            self._log.warning(
+                "No knowledge base context retrieved - LLM will have limited guidance for task: %s",
+                task_desc[:50],
+            )
+
         return (
             f"Task: {task_desc}\n"
             f"Target GPU arch: {arch}.\n"
@@ -44,12 +59,24 @@ class PromptManager:
             + ("\nRelevant documentation snippets:\n" + kb_text if kb_text else "")
         )
 
-    def refine_prompt_for_errors(self, original_prompt: str, errors: List[str], history: List[str]) -> str:
+    def refine_prompt_for_errors(
+        self, original_prompt: str, errors: List[str], history: List[str]
+    ) -> str:
         joined = "\n".join(errors[-5:])
-        return original_prompt + "\nPrevious attempts failed to compile or run. Address these errors:\n" + joined
-
-    def refine_prompt_for_performance(self, original_prompt: str, best_kernel_notes: str) -> str:
-        hints = (
-            "Focus on performance: use coalesced memory accesses, prefer shared memory, avoid divergent branches, choose reasonable block sizes, unroll inner loops where beneficial."
+        return (
+            original_prompt
+            + "\nPrevious attempts failed to compile or run. Address these errors:\n"
+            + joined
         )
-        return original_prompt + "\nPerformance hints:\n" + hints + "\n" + best_kernel_notes
+
+    def refine_prompt_for_performance(
+        self, original_prompt: str, best_kernel_notes: str
+    ) -> str:
+        hints = "Focus on performance: use coalesced memory accesses, prefer shared memory, avoid divergent branches, choose reasonable block sizes, unroll inner loops where beneficial."
+        return (
+            original_prompt
+            + "\nPerformance hints:\n"
+            + hints
+            + "\n"
+            + best_kernel_notes
+        )

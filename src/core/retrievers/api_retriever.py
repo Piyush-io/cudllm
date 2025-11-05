@@ -1,17 +1,27 @@
+"""API knowledge retriever."""
+
 from typing import Dict
 from ...schemas.knowledge import StructuredUserIntent, APIKnowledge
 from ..vector_store import search_stage
-import os
 
 
 class APIRetriever:
-    def __init__(self):
-        self.api_key = os.environ.get("CHROMA_API_KEY")
-        self.tenant = os.environ.get("CHROMA_TENANT")
-        self.database = os.environ.get("CHROMA_DATABASE")
-        # stage handled via search_stage
+    """Retrieves CUDA API knowledge from vector store."""
 
     def retrieve(self, request: StructuredUserIntent, context: Dict) -> APIKnowledge:
-        q = "nvcc flags for target arch, cudaEvent timing best practices, cudaMemcpy, streams."
+        """
+        Retrieve API knowledge relevant to the user's request.
+
+        Args:
+            request: Structured user intent with task and constraints.
+            context: Shared context from previous retrieval stages.
+
+        Returns:
+            APIKnowledge with relevant snippets.
+        """
+        q = (
+            "nvcc flags for target arch, cudaEvent timing best practices, "
+            "cudaMemcpy, streams."
+        )
         snippets = search_stage(stage="api", query=q, k=3)
         return APIKnowledge(snippets=snippets)

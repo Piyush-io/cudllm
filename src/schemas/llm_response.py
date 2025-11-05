@@ -32,7 +32,7 @@ class ProfileResult(BaseModel):
 class CandidateResult(BaseModel):
     kernel_src: str
     compile: CompileResult
-    validate: Optional[ValidationResult] = None
+    validation: Optional[ValidationResult] = None
     profile: Optional[ProfileResult] = None
 
 
